@@ -13,11 +13,17 @@ function Login() {
     const [error, setError] = useState("")
 
     const login = async(data) => {
+        //console.log(data)
         setError("")
         try {
-            const session = await authService.login(data)
+            const session = await authService.login({
+                email: data.email, 
+                password: data.password
+            })
             if (session) {
+                //console.log(session)
                 const userData = await authService.getCurrentUser()
+                //console.log(userData)
                 if(userData) dispatch(authLogin(userData));
                 navigate("/")
             }
