@@ -1,19 +1,27 @@
 import React, {useEffect, useState} from 'react'
 import appwriteService from "../appwrite/config";
 import {Container, PostCard} from '../components'
+import { useSelector } from "react-redux";
 
 
 function Home() {
     const [posts, setPosts] = useState([])
-
+    const isLoggedIn = useSelector((state) => state.auth.status);
+    // this is the way that i can check the user login status using state.auth.status
+    // similarly for userData, state.auth.userData
     useEffect(() => {
  
         appwriteService.getPosts().then((posts) => {
             if (posts) {
                 setPosts(posts.documents)
             }
+            else{
+                setPosts([])
+                // so that if the user logs out , the dependenncy array variable changes , 
+                // this useEffect runs again and Posts are set to []
+            }
         })
-    }, [])
+    }, [isLoggedIn])
   
     if (posts.length === 0) {
         return (

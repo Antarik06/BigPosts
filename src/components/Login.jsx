@@ -23,8 +23,8 @@ function Login() {
             if (session) {
                 //console.log(session)
                 const userData = await authService.getCurrentUser()
-                //console.log(userData)
-                if(userData) dispatch(authLogin(userData));
+                console.log("userdata",userData)
+                if(userData) dispatch(authLogin({userData}));
                 navigate("/")
             }
         } catch (error) {
