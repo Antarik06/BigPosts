@@ -9,10 +9,10 @@ export default function PostForm({ post }) {
   const navigate = useNavigate();
   const { slug } = useParams();
   const userData = useSelector((state) => state.auth.userData);
-
+  //console.log("slug",slug)
   // State for post data (existing post) and image preview
   const [postData, setPostData] = useState(post || null);
-  const [imageUrl, setImageUrl] = useState(post?.featuredImage ? null : null);
+  const [imageUrl, setImageUrl] = useState(null);
 
   const { register, handleSubmit, watch, setValue, control, getValues } = useForm({
     defaultValues: {
@@ -22,29 +22,44 @@ export default function PostForm({ post }) {
       status: post?.status || "active",
     },
   });
+  //console.log(post?.$id);
+  
 
-  // Fetch post if slug exists
-  useEffect(() => {
-    const fetchPost = async () => {
-      if (!slug) return;
+// Fetch post when slug exists 
+useEffect(() => {
+  if (!slug) return;
 
-      const fetchedPost = await appwriteService.getPost(slug);
-      if (fetchedPost) {
-        setPostData(fetchedPost);
-        if (fetchedPost.featuredImage) {
-          const url = await appwriteService.getFilePreview(fetchedPost.featuredImage);
-          setImageUrl(url);
-        }
-      } else {
-        navigate("/");
-      }
-    };
+  const fetchPost = async () => {
+    const fetchedPost = await appwriteService.getPost(slug);
+    if (fetchedPost) {
+      setPostData(fetchedPost);
+    } else {
+      navigate("/");
+    }
+  };
 
-    if (!postData) fetchPost();
-  }, [slug, navigate, postData]);
+  fetchPost();
+}, [slug]);
 
-  // Preview selected file immediately
+// Load image preview any time postData changes
+useEffect(() => {
+  if (postData?.featuredImage) {
+    appwriteService
+      .getFilePreview(postData.featuredImage)
+      .then((url) => setImageUrl(url));
+  }
+}, [postData]);
+
+
   const watchedImage = watch("image");
+  // watcch(something) -> returns value of the field
+  // as image is a file input field
+  // it returns FileList which looks like
+  //FileList {
+  // 0: File { name: "...", size: ..., type: "...", ... }
+  // length: 1
+  //}
+
   useEffect(() => {
     if (watchedImage && watchedImage[0]) {
       const url = URL.createObjectURL(watchedImage[0]);
@@ -52,7 +67,6 @@ export default function PostForm({ post }) {
     }
   }, [watchedImage]);
 
-  // Slug transformation
   const slugTransform = useCallback((value) => {
     if (value && typeof value === "string") {
       return value
@@ -63,15 +77,27 @@ export default function PostForm({ post }) {
     }
     return "";
   }, []);
+/*
+Interesting way of slug transform without even calling it in the title input 
+btw i am calling it so this is commented
 
-  React.useEffect(() => {
-    const subscription = watch((value, { name }) => {
-      if (name === "title") {
-        setValue("slug", slugTransform(value.title), { shouldValidate: true });
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, slugTransform, setValue]);
+useEffect(() => {
+  const subscription = watch((value, { name }) => {
+    if (name === "title") {
+      setValue("slug", slugTransform(value.title), { shouldValidate: true });
+    }
+  });
+  return () => subscription.unsubscribe();
+}, [watch, slugTransform, setValue]);
+
+watch() from React Hook Form automatically receives (values, info)
+every time ANY registered field changes.
+info is an object and has a name field which tells where the change is happening in the form
+values is the content of that field
+Whenever ANY input registered with register() changes,
+ReactHookForm calls the watch callback automatically.
+*/
+
 
   // Submit handler
   const submit = async (data) => {
@@ -118,6 +144,11 @@ export default function PostForm({ post }) {
           placeholder="Title"
           className="mb-4"
           {...register("title", { required: true })}
+          // we had given default values to the title field before,
+          // we are using that to fill that value in this field
+          onInput={(e) => setValue("slug", slugTransform(e.currentTarget.value), { shouldValidate: true })}
+          // setValue cahnges the field values and has 3 parameters
+          // name of the field, the value to which the field need to be changed to , and options 
         />
         <Input
           label="Slug :"
@@ -126,7 +157,11 @@ export default function PostForm({ post }) {
           {...register("slug", { required: true })}
           onInput={(e) => setValue("slug", slugTransform(e.currentTarget.value), { shouldValidate: true })}
         />
-        <RTE label="Content :" name="content" control={control} defaultValue={getValues("content")} />
+        <RTE 
+         label="Content :" 
+         name="content" 
+         control={control} 
+         defaultValue={getValues("content")} />
       </div>
       <div className="w-1/3 px-2">
         <Input
@@ -135,6 +170,14 @@ export default function PostForm({ post }) {
           className="mb-4"
           accept="image/png, image/jpg, image/jpeg, image/gif"
           {...register("image", { required: !postData })}
+          //image inputs do not get default values , it is not allowed 
+          //by browsers and also not needed
+          //but we still register it as ReactHokForms needs to register
+          //neverthless for the form to work / get tracked
+
+          //required: !postData 
+          // -> as on new posts i require it mandatory
+          // -> and on edit posts it is not mandatory
         />
         {imageUrl && (
           <div className="w-full mb-4">
