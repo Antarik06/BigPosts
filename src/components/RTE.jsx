@@ -1,6 +1,8 @@
 import React from 'react'
 import {Editor } from '@tinymce/tinymce-react';
 import {Controller } from 'react-hook-form';
+//tinyMCE is not a normal input field 
+//it needs Controller to register the input to RHF
 import conf from '../conf/conf.js';
 
 
@@ -10,9 +12,10 @@ export default function RTE({name, control, label, defaultValue =""}) {
     {label && <label className='inline-block mb-1 pl-1'>{label}</label>}
 
     <Controller
-    name={name || "content"}
+    name={name}
     control={control}
     render={({field: {onChange}}) => (
+      //field:{onChange} -> updates from value in ReactHookForm  
         <Editor
         apiKey={conf.tinyMCEApiKey}
         initialValue={defaultValue}

@@ -23,7 +23,12 @@ export default function PostForm({ post }) {
     },
   });
   //console.log(post?.$id);
-  
+  //you can use getValues("field_name") to get ANY of the fields (title, slug, content, status),
+  //only getValue() return object with all the fields
+  // but it will NOT update in realtime.
+
+  // this control initialized here is used later to pass to the RTE
+  // which controls the tinyMCE editor with RHF only
 
 // Fetch post when slug exists 
 useEffect(() => {

@@ -1,15 +1,10 @@
 import React, {useId} from 'react'
 
-function Select({
-    options,
-    label,
-    className,
-    ...props
-}, ref) {
-    const id = useId()
+function Select({options,label,className,...props}, ref) {
+  const id = useId()
   return (
     <div className='w-full'>
-        {label && <label htmlFor={id} className=''></label>}
+        {label && <label htmlFor={id}></label>}
         <select
         {...props}
         id={id}
@@ -27,3 +22,5 @@ function Select({
 }
 
 export default React.forwardRef(Select)
+// it is imporatant to pass the reference otherwise RHF wont be able to track it properly
+// without ref also it works butbetter to do this way
